@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: content">
+<head>
+    <meta charset="UTF-8">
+    <title>Adoption Application - PetAdopt</title>
+</head>
+<body>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title">领养申请</h3>
+                <form th:action="@{/apply}" method="post" class="needs-validation" novalidate>
+                    <input type="hidden" name="petId" th:value="${pet.id}">
+                    <div class="mb-3">
+                        <label class="form-label">姓名</label>
+                        <input type="text" name="applicantName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">联系电话</label>
+                        <input type="text" name="phone" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">家庭住址</label>
+                        <input type="text" name="address" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">为什么想领养这只宠物？</label>
+                        <textarea name="reason" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-primary">提交申请</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
