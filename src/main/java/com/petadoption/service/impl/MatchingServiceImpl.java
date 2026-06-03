@@ -1,5 +1,6 @@
 package com.petadoption.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.petadoption.mapper.MatchingRecordMapper;
@@ -9,10 +10,16 @@ import com.petadoption.model.entity.Pet;
 import com.petadoption.model.entity.User;
 import com.petadoption.service.MatchingService;
 import com.petadoption.service.PetService;
+import com.petadoption.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +37,9 @@ public class MatchingServiceImpl extends ServiceImpl<MatchingRecordMapper, Match
 
     @Autowired
     private PetService petService;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 智能匹配算法核心
@@ -66,6 +76,7 @@ public class MatchingServiceImpl extends ServiceImpl<MatchingRecordMapper, Match
      * 住所匹配度计算
      */
     private double calculateResidenceScore(User user, Pet pet) {
+        if (user == null || pet == null) return 50.0;
         if (user.getResidenceType() == null || pet.getSize() == null) {
             return 50.0;
         }
@@ -88,6 +99,7 @@ public class MatchingServiceImpl extends ServiceImpl<MatchingRecordMapper, Match
      * 养宠经验匹配度计算
      */
     private double calculateExperienceScore(User user, Pet pet) {
+        if (user == null || pet == null) return 50.0;
         if (user.getPetExperience() == null || pet.getBreedingDifficulty() == null) {
             return 50.0;
         }
@@ -118,12 +130,13 @@ public class MatchingServiceImpl extends ServiceImpl<MatchingRecordMapper, Match
      * 家庭人口匹配度计算
      */
     private double calculateFamilyScore(User user, Pet pet) {
+        if (user == null) return 50.0;
         if (user.getFamilySize() == null) {
             return 50.0;
         }
 
         // 宠物性格中包含"温和"、"友好"等字样时，适合大家庭
-        String personality = pet.getPersonality() != null ? pet.getPersonality().toLowerCase() : "";
+        String personality = pet != null && pet.getPersonality() != null ? pet.getPersonality().toLowerCase() : "";
 
         if (user.getFamilySize() >= 3) {
             if (personality.contains("温和") || personality.contains("友好")) {
@@ -139,9 +152,10 @@ public class MatchingServiceImpl extends ServiceImpl<MatchingRecordMapper, Match
     }
 
     /**
-     * 健康状况匹配度计算
+     * ���康状况匹配度计算
      */
     private double calculateHealthScore(User user, Pet pet) {
+        if (pet == null) return 50.0;
         if (pet.getHealthStatus() == null) {
             return 50.0;
         }
@@ -162,23 +176,19 @@ public class MatchingServiceImpl extends ServiceImpl<MatchingRecordMapper, Match
     private double calculateBonusScore(User user, Pet pet) {
         double bonusScore = 0.0;
 
-        // 加分项1：用户同意科学养宠
-        if (user.getAgreeScientificCare() != null && user.getAgreeScientificCare() == 1) {
+        if (user != null && user.getAgreeScientificCare() != null && user.getAgreeScientificCare() == 1) {
             bonusScore += 30.0;
         }
 
-        // 加分项2：用户有阳台
-        if (user.getHasBalcony() != null && user.getHasBalcony() == 1) {
+        if (user != null && user.getHasBalcony() != null && user.getHasBalcony() == 1) {
             bonusScore += 20.0;
         }
 
-        // 加分项3：宠物已疫苗接种
-        if (pet.getIsVaccinated() != null && pet.getIsVaccinated() == 1) {
+        if (pet != null && pet.getIsVaccinated() != null && pet.getIsVaccinated() == 1) {
             bonusScore += 25.0;
         }
 
-        // 加分项4：宠物已绝育
-        if (pet.getIsNeutered() != null && pet.getIsNeutered() == 1) {
+        if (pet != null && pet.getIsNeutered() != null && pet.getIsNeutered() == 1) {
             bonusScore += 25.0;
         }
 
@@ -195,12 +205,62 @@ public class MatchingServiceImpl extends ServiceImpl<MatchingRecordMapper, Match
     }
 
     @Override
+    @Transactional
     public void generateRecommendations(Long userId) {
-        // 清空旧的匹配记录
+        if (userId == null) {
+            throw new IllegalArgumentException("userId 不能为空");
+        }
+
+        // 1. 获取用户信息
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在: " + userId);
+        }
+
+        // 2. 清理旧的匹配记录（先删除，避免重复）
         clearOldMatchings(userId);
 
-        // 这里应该调用UserService和PetService获取用户和宠物信息
-        // 为简化，这里仅作为接口框架
+        // 3. 查询所有待领养宠物（根据业务字段筛选，例：status == 0 表示可领养）
+        QueryWrapper<Pet> petWrapper = new QueryWrapper<>();
+        petWrapper.eq("status", 0);
+        List<Pet> pets = petMapper.selectList(petWrapper);
+
+        if (pets == null || pets.isEmpty()) {
+            return; // 没有待领养宠物，直接返回
+        }
+
+        // 4. 计算匹配分并构建 MatchingRecord 列表
+        List<MatchingRecord> records = new ArrayList<>(pets.size());
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Pet pet : pets) {
+            double score = calculateMatchingScore(user, pet);
+
+            Map<String, Object> details = new HashMap<>();
+            details.put("residenceScore", calculateResidenceScore(user, pet));
+            details.put("experienceScore", calculateExperienceScore(user, pet));
+            details.put("familyScore", calculateFamilyScore(user, pet));
+            details.put("healthScore", calculateHealthScore(user, pet));
+            details.put("bonusScore", calculateBonusScore(user, pet));
+
+            MatchingRecord record = MatchingRecord.builder()
+                    .userId(userId)
+                    .petId(pet.getId())
+                    .matchingScore(Math.min(100.0, score))
+                    .matchingDetails(JSON.toJSONString(details))
+                    .isPushed(0)
+                    .isClicked(0)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
+
+            records.add(record);
+        }
+
+        // 5. 批量保存匹配记录（ServiceImpl 提供 saveBatch 方法）
+        if (!records.isEmpty()) {
+            this.saveBatch(records);
+        }
     }
 
     @Override
