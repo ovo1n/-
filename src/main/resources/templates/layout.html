@@ -8,9 +8,9 @@
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<nav class="navbar navbar-expand-lg shadow-sm navbar-light">
     <div class="container">
-        <a class="navbar-brand" th:href="@{/}">PetAdopt</a>
+        <a class="navbar-brand" th:href="@{/}">PetAdopt 🐾</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -29,9 +29,9 @@
     <div th:replace="~{::content}"></div>
 </main>
 
-<footer class="bg-dark text-light py-4 mt-auto">
+<footer class="bg-soft-pink text-dark py-4 mt-auto">
     <div class="container text-center small">
-        © <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2026</span> PetAdopt · Built with ❤️
+        © <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2026</span> PetAdopt · Made with <span class="heart">❤</span>
     </div>
 </footer>
 
