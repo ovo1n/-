@@ -1,0 +1,7 @@
+body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+.hero { border-radius: 8px; }
+.card-img-top { height: 220px; object-fit: cover; }
+.navbar-brand { font-weight: 700; color: #2b6cb0; }
+footer { position: relative; bottom: 0; width: 100%; }
+.btn-primary { background: linear-gradient(90deg,#36d1dc,#5b86e5); border: none; }
+.btn-success { background: linear-gradient(90deg,#7bd389,#34d399); border: none; }
