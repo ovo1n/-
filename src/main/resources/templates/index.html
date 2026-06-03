@@ -5,50 +5,118 @@
     <title>Home - PetAdopt</title>
 </head>
 <body>
-<section class="hero py-5 text-white">
+<section class="hero">
+    <div class="hero-content">
+        <h1><i class="fas fa-heart" style="color: var(--accent-color);"></i> 流浪宠物救助与领养平台</h1>
+        <p>用爱心拯救流浪宠物，为它们找到温暖的家</p>
+        <div>
+            <a href="#pets" class="btn-hero"><i class="fas fa-search"></i> 查看宠物</a>
+            <a href="/register" class="btn-hero"><i class="fas fa-plus-circle"></i> 我要领养</a>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="features-section">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-7">
-                <h1 class="display-5 fw-bold">给流浪宠物一个温暖的家</h1>
-                <p class="lead">发现、匹配并领养心仪的宠物，我们帮你智能推荐最合适的伙伴。</p>
-                <a class="btn btn-light btn-lg" th:href="@{/pets}">查看可领养宠物</a>
+        <div class="section-title">
+            <h2>为什么选择我们？</h2>
+            <p>完整的宠物救助和领养解决方案</p>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4" th:each="f : ${features}">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h5 th:text="${f.title}">智能匹配</h5>
+                    <p th:text="${f.desc}">基于科学算法，为您推荐最适合的宠物伙伴</p>
+                </div>
             </div>
-            <div class="col-md-5 text-center">
-                <img src="https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=900&q=80&auto=format&fit=crop" class="img-fluid rounded shadow" alt="pets">
+            <!-- fallback static cards if features not provided -->
+            <div class="col-md-4 mb-4" th:if="${features == null}">
+                <div class="feature-card"><div class="feature-icon">🔍</div><h5>智能匹配</h5><p>基于科学算法，为您推荐最适合的宠物伙伴</p></div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="py-5">
+<section id="pets" class="pets-section">
     <div class="container">
-        <h2 class="mb-4">推荐宠物</h2>
-        <div class="row g-4">
-            <div class="col-md-4" th:each="rec : ${recommendations}">
-                <div class="card h-100 shadow-sm card-cute">
-                    <img th:src="${rec.pet.imageUrl} ?: 'https://via.placeholder.com/600x350?text=Pet'" class="card-img-top" alt="pet">
-                    <div class="card-body">
-                        <h5 class="card-title" th:text="${rec.pet.name}">Pet Name</h5>
-                        <p class="card-text text-muted small" th:text="${rec.pet.breed}">Breed</p>
-                        <p class="mb-2">匹配度: <span class="fw-bold" th:text="${#numbers.formatDecimal(rec.matchingScore, 1, 'POINT', 1, 'NONE')}">88.5</span>%</p>
-                        <a th:href="@{/pets/{id}(id=${rec.pet.id})}" class="btn btn-primary">查看详情</a>
+        <div class="section-title">
+            <h2>🐾 等待爱心的宠物</h2>
+            <p>这些可爱的小生命期待您的关爱</p>
+        </div>
+        <div class="row" id="petsList">
+            <div class="col-md-6 col-lg-4 mb-4" th:each="rec : ${recommendations}">
+                <div class="pet-card">
+                    <div class="pet-image-wrapper">
+                        <img th:src="${rec.pet.imageUrl} ?: 'https://via.placeholder.com/600x350?text=Pet'" alt="pet">
+                        <span class="pet-status-badge" th:text="${rec.pet.status == 0 ? '待领养' : '已领养'}">待领养</span>
+                    </div>
+                    <div class="pet-info">
+                        <div class="pet-name" th:text="${rec.pet.name}">小白</div>
+                        <div class="pet-details">
+                            <div class="pet-detail-item" th:text="${rec.pet.breed}">品种</div>
+                            <div class="pet-detail-item" th:text="${rec.pet.age + '岁'}">年龄</div>
+                            <div class="pet-detail-item" th:text="${rec.pet.personality}">性格</div>
+                            <div class="pet-detail-item" th:text="${rec.pet.isVaccinated == 1 ? '已疫苗' : '未疫苗'}">疫苗</div>
+                        </div>
+                        <div class="pet-action">
+                            <a th:href="@{/apply/{petId}(petId=${rec.pet.id})}" class="btn-pet btn-adopt"><i class="fas fa-check"></i> 我要领养</a>
+                            <button class="btn-pet btn-favorite"><i class="fas fa-heart"></i> 收藏</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- 占位卡片示例，当recommendations为空时显示几张可爱占位 -->
-            <div class="col-md-4" th:if="${recommendations == null}">
-                <div class="card h-100 shadow-sm card-cute">
-                    <img src="https://images.unsplash.com/photo-1525253086316-d0c936c814f8?w=700&q=80&auto=format&fit=crop" class="card-img-top" alt="pet">
-                    <div class="card-body">
-                        <h5 class="card-title">小粉猪</h5>
-                        <p class="card-text text-muted small">可爱混种</p>
-                        <p class="mb-2">匹配度: <span class="fw-bold">92</span>%</p>
-                        <a href="#" class="btn btn-primary">查看详情</a>
+            <!-- placeholder cards when no recommendations -->
+            <div class="col-md-6 col-lg-4 mb-4" th:if="${recommendations == null}">
+                <div class="pet-card">
+                    <div class="pet-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1587300411107-ec48192ad386?w=400&h=300&fit=crop" alt="小白">
+                        <span class="pet-status-badge">待领养</span>
                     </div>
+                    <div class="pet-info"><div class="pet-name">小白</div><div class="pet-details"><div class="pet-detail-item">比熊犬</div><div class="pet-detail-item">2岁</div></div><div class="pet-action"><button class="btn-pet btn-adopt">我要领养</button><button class="btn-pet btn-favorite">收藏</button></div></div>
                 </div>
             </div>
         </div>
+        <div style="text-align:center; margin-top:50px;">
+            <a href="#" class="btn-hero">查看更多宠物</a>
+        </div>
     </div>
 </section>
+
+<section id="stats" class="stats-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>平台成就</h2>
+            <p>我们为流浪宠物做出的贡献</p>
+        </div>
+        <div class="row">
+            <div class="col-md-3 col-sm-6 mb-4"><div class="stat-item"><div class="stat-number">189</div><div class="stat-label">待领养宠物</div></div></div>
+            <div class="col-md-3 col-sm-6 mb-4"><div class="stat-item"><div class="stat-number">1.2K</div><div class="stat-label">注册用户</div></div></div>
+            <div class="col-md-3 col-sm-6 mb-4"><div class="stat-item"><div class="stat-number">856</div><div class="stat-label">成功领养</div></div></div>
+            <div class="col-md-3 col-sm-6 mb-4"><div class="stat-item"><div class="stat-number">95%</div><div class="stat-label">满意度评分</div></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container text-center">
+        <h2>准备好开启您的爱心之旅吗？</h2>
+        <p>每一只宠物都值得被爱，加入我们，为流浪宠物找一个温暖的家</p>
+        <a href="/register" class="btn-cta"><i class="fas fa-heart"></i> 立即注册</a>
+        <a href="#pets" class="btn-cta btn-outline"><i class="fas fa-search"></i> 浏览宠物</a>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-section"><h5><i class="fas fa-paw"></i> 关于我们</h5><p style="color:#6b6b6b;">我们致力于帮助流浪宠物找到温暖家庭。</p></div>
+            <div class="footer-section"><h5>快速链接</h5><ul><li><a href="#">首页</a></li><li><a href="#pets">宠物列表</a></li><li><a href="#">常见问题</a></li><li><a href="#">联系我们</a></li></ul></div>
+            <div class="footer-section"><h5>用户中心</h5><ul><li><a href="/login">登录</a></li><li><a href="/register">注册</a></li></ul></div>
+            <div class="footer-section"><h5>联系方式</h5><ul><li>400-888-8888</li><li>info@petadoption.com</li></ul></div>
+        </div>
+        <div class="footer-divider"><p>&copy; 2026 PetAdopt · 隐私政策 · 服务条款</p></div>
+    </div>
+</footer>
 </body>
 </html>
