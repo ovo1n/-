@@ -1,0 +1,17 @@
+spring:
+  profiles: prod
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:petadopt}?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=UTC&useSSL=false
+    username: ${DB_USER:pet_user}
+    password: ${DB_PASSWORD:pet_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none   # 生产不要用 update/create
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
